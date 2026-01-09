@@ -18,3 +18,12 @@ exports.login = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.verifyEmail = async (req, res, next) => {
+  try {
+    await authService.verifyEmail(req.query.token);
+    success(res, null, "Email verified successfully");
+  } catch (err) {
+    next(err);
+  }
+};
