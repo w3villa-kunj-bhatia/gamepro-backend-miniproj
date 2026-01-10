@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GamePro API Tester</title>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+      }
+      button {
+        margin: 5px 0;
+      }
+      input {
+        margin: 5px 0;
+        display: block;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Login</h2>
+    <input id="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+
+    <h2>Profile</h2>
+    <button onclick="createProfile()">Create / Update Profile</button>
+
+    <h2>Games</h2>
+    <button onclick="addGame()">Add Game</button>
+
+    <h2>Response</h2>
+    <pre id="output"></pre>
+
+    <script>
+      const API = "http://localhost:5000/api";
+      let token = "";
+
+      function show(data) {
+        document.getElementById("output").innerText = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+
+      async function login() {
+        const res = await fetch(`${API}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+          }),
+        });
+
+        const data = await res.json();
+        token = data.data?.token;
+        show(data);
+      }
+
+      async function createProfile() {
+        const res = await fetch(`${API}/profile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            username: "html_tester",
+            address: "Test City",
+          }),
+        });
+
+        show(await res.json());
+      }
+
+      async function addGame() {
+        const res = await fetch(`${API}/games`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: "HTML Game",
+            platform: "PC",
+            skill: "Beginner",
+          }),
+        });
+
+        show(await res.json());
+      }
+    </script>
+  </body>
+</html>
