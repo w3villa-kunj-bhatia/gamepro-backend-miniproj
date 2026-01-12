@@ -1,18 +1,31 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>GamePro API Tester</title>
+    <title>GamePro – API Tester</title>
     <style>
       body {
         font-family: Arial;
         padding: 20px;
+        max-width: 900px;
       }
+      input,
       button {
         margin: 5px 0;
+        padding: 6px;
       }
-      input {
-        margin: 5px 0;
-        display: block;
+      img {
+        border-radius: 6px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .card {
+        border: 1px solid #ccc;
+        padding: 10px;
+        width: 160px;
+        text-align: center;
       }
       pre {
         background: #f4f4f4;
@@ -20,92 +33,171 @@
       }
     </style>
   </head>
+
   <body>
+    <h1>🎮 GamePro – Backend Tester</h1>
+
+    <!-- LOGIN -->
     <h2>Login</h2>
     <input id="email" placeholder="Email" />
     <input id="password" type="password" placeholder="Password" />
     <button onclick="login()">Login</button>
 
-    <h2>Profile</h2>
-    <button onclick="createProfile()">Create / Update Profile</button>
+    <hr />
 
-    <h2>Games</h2>
-    <button onclick="addGame()">Add Game</button>
+    <!-- PROFILE -->
+    <h2>My Profile</h2>
+    <button onclick="getProfile()">Load Profile</button>
+    <button onclick="addCharacters()">Add Top Characters</button>
+    <pre id="profileOutput"></pre>
 
-    <h2>Dashboard</h2>
-    <button onclick="loadProfiles()">Load Profiles</button>
+    <hr />
 
-    <h2>Response</h2>
-    <pre id="output"></pre>
+    <!-- IGDB SEARCH -->
+    <h2>IGDB Game Search</h2>
+    <input id="search" placeholder="Search game..." oninput="autoSearch()" />
+    <div id="games" class="row"></div>
+
+    <hr />
+
+    <!-- TOP GAMES -->
+    <h2>My Top Games</h2>
+    <div id="myGames" class="row"></div>
 
     <script>
+      console.log("SCRIPT LOADED");
+
+      /* ================= CONFIG ================= */
+
       const API = "http://localhost:5000/api";
       let token = "";
+      let debounceTimer = null;
 
-      function show(data) {
-        document.getElementById("output").innerText = JSON.stringify(
-          data,
-          null,
-          2
-        );
+      function headers() {
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
       }
+
+      /* ================= LOGIN ================= */
 
       async function login() {
         const res = await fetch(`${API}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: document.getElementById("email").value,
-            password: document.getElementById("password").value,
+            email: email.value,
+            password: password.value,
           }),
         });
 
         const data = await res.json();
-        token = data.data?.token;
-        show(data);
+        token = data.data.token;
+        alert("Logged in successfully");
       }
 
-      async function createProfile() {
-        const res = await fetch(`${API}/profile`, {
+      /* ================= PROFILE ================= */
+
+      async function getProfile() {
+        const res = await fetch(`${API}/profile/me`, {
+          headers: headers(),
+        });
+
+        const data = await res.json();
+        profileOutput.innerText = JSON.stringify(data, null, 2);
+        renderMyGames(data.data.games || []);
+      }
+
+      async function addCharacters() {
+        await fetch(`${API}/profile`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: headers(),
           body: JSON.stringify({
-            username: "html_tester",
-            address: "Test City",
+            topCharacters: [
+              { name: "Kratos", imageUrl: "https://i.imgur.com/9Xn7YjU.jpg" },
+              { name: "Geralt", imageUrl: "https://i.imgur.com/J5LVHEL.jpg" },
+              { name: "Mario", imageUrl: "https://i.imgur.com/5K0T8nP.png" },
+            ],
           }),
         });
 
-        show(await res.json());
+        alert("Top characters saved");
+        getProfile();
       }
 
-      async function addGame() {
-        const res = await fetch(`${API}/games`, {
+      /* ================= IGDB AUTOCOMPLETE ================= */
+
+      async function autoSearch() {
+        const query = search.value.trim();
+        if (query.length < 2) {
+          games.innerHTML = "";
+          return;
+        }
+
+        clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(async () => {
+          const res = await fetch(
+            `${API}/igdb/search?q=${encodeURIComponent(query)}`
+          );
+          const data = await res.json();
+          renderIGDBResults(data.data || []);
+        }, 400);
+      }
+
+      function renderIGDBResults(list) {
+        games.innerHTML = "";
+
+        list.forEach((game) => {
+          const cover = game.cover?.url
+            ? game.cover.url.replace("t_thumb", "t_cover_big")
+            : "";
+
+          games.innerHTML += `
+      <div class="card">
+        <img src="${cover}" width="120"><br>
+        <b>${game.name}</b><br>
+        <button onclick="addGameFromIGDB(
+          ${game.id},
+          '${game.name.replace(/'/g, "")}',
+          '${cover}'
+        )">
+          Add
+        </button>
+      </div>
+    `;
+        });
+      }
+
+      async function addGameFromIGDB(igdbId, name, coverUrl) {
+        await fetch(`${API}/games`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: headers(),
           body: JSON.stringify({
-            name: "HTML Game",
+            name,
             platform: "PC",
-            skill: "Beginner",
+            igdbId,
+            coverUrl,
           }),
         });
 
-        show(await res.json());
+        alert("Game added");
+        getProfile();
       }
 
-      async function loadProfiles() {
-        const res = await fetch(`${API}/dashboard/profiles?page=1&limit=5`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      /* ================= RENDER ================= */
 
-        show(await res.json());
+      function renderMyGames(gamesList) {
+        myGames.innerHTML = "";
+        gamesList.forEach((g) => {
+          myGames.innerHTML += `
+      <div class="card">
+        <img src="${g.coverUrl}" width="120"><br>
+        ${g.name}
+      </div>
+    `;
+        });
       }
     </script>
   </body>

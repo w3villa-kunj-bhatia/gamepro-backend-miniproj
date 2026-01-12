@@ -23,7 +23,7 @@ const runPlanExpiryJob = () => {
     }
     const freeLimit = plans.free.savedProfiles;
 
-    const savedProfiles = await SavedProfile.find({ user: user._id }).sort({
+    const savedProfiles = await SavedProfile.find({ User: User._id }).sort({
       createdAt: 1,
     }); 
 
