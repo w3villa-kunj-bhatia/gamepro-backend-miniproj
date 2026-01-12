@@ -2,56 +2,38 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const AppError = require("../utils/AppError");
-const { generateToken } = require("../utils/token");
-const { sendEmail } = require("../utils/email");
-
-exports.register = async ({ email, password }) => {
-  const exists = await User.findOne({ email });
-  if (exists) throw new AppError("User already exists", 409);
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const verificationToken = generateToken();
-
-  const user = await User.create({
-    email,
-    password: hashedPassword,
-    emailVerificationToken: verificationToken,
-    emailVerificationExpires: Date.now() + 1000 * 60 * 60,
-  });
-
-  await sendEmail({
-    to: email,
-    subject: "Verify your email",
-    html: `Verify token: ${verificationToken}`,
-  });
-
-  return user;
-};
 
 exports.verifyEmail = async (token) => {
-  const user = await User.findOne({
-    emailVerificationToken: token,
-    emailVerificationExpires: { $gt: Date.now() },
-  });
+  // Use findOneAndUpdate to ensure the database change is atomic and saved
+  const user = await User.findOneAndUpdate(
+    {
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() },
+    },
+    {
+      $set: { isVerified: true },
+      // Use $unset to completely remove the token fields once verified
+      $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
+    },
+    { new: true }
+  );
 
   if (!user) throw new AppError("Invalid or expired token", 400);
-
-  user.isVerified = true;
-  user.emailVerificationToken = null;
-  user.emailVerificationExpires = null;
-
-  await user.save();
   return true;
 };
 
 exports.login = async ({ email, password }) => {
-  const user = await User.findOne({ email });
+  // 1. Normalize the email to prevent casing mismatches between Postman and Browser
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) throw new AppError("Invalid credentials", 401);
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new AppError("Invalid credentials", 401);
 
-  if (!user.isVerified) {
+  // 2. Explicitly check for true. If this is false, you get the 403 error.
+  if (user.isVerified !== true) {
     throw new AppError("Email not verified", 403);
   }
 
