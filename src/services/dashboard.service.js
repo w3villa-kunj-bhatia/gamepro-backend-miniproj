@@ -4,7 +4,6 @@ const Reaction = require("../models/Reaction");
 exports.getProfiles = async ({ userId, page = 1, limit = 5 }) => {
   const skip = (page - 1) * limit;
 
-  // Get profiles except own
   const profiles = await Profile.find({ user: { $ne: userId } })
     .skip(skip)
     .limit(limit)
@@ -12,7 +11,6 @@ exports.getProfiles = async ({ userId, page = 1, limit = 5 }) => {
 
   const profileIds = profiles.map((p) => p._id);
 
-  // Aggregate likes / dislikes
   const reactions = await Reaction.aggregate([
     { $match: { profile: { $in: profileIds } } },
     {
@@ -23,7 +21,6 @@ exports.getProfiles = async ({ userId, page = 1, limit = 5 }) => {
     },
   ]);
 
-  // Build counts map
   const countsMap = {};
   reactions.forEach((r) => {
     const pid = r._id.profile.toString();
@@ -33,7 +30,6 @@ exports.getProfiles = async ({ userId, page = 1, limit = 5 }) => {
     countsMap[pid][`${r._id.type}s`] = r.count;
   });
 
-  // Attach counts
   const result = profiles.map((p) => ({
     ...p,
     likes: countsMap[p._id]?.likes || 0,

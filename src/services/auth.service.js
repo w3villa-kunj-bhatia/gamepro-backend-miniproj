@@ -5,7 +5,6 @@ const AppError = require("../utils/AppError");
 const { generateToken } = require("../utils/token");
 const { sendEmail } = require("../utils/email");
 
-/* ===================== REGISTER ===================== */
 exports.register = async ({ email, password }) => {
   const exists = await User.findOne({ email });
   if (exists) throw new AppError("User already exists", 409);
@@ -29,7 +28,6 @@ exports.register = async ({ email, password }) => {
   return user;
 };
 
-/* ===================== VERIFY EMAIL ===================== */
 exports.verifyEmail = async (token) => {
   const user = await User.findOne({
     emailVerificationToken: token,
@@ -46,7 +44,6 @@ exports.verifyEmail = async (token) => {
   return true;
 };
 
-/* ===================== LOGIN ===================== */
 exports.login = async ({ email, password }) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError("Invalid credentials", 401);

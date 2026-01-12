@@ -12,6 +12,10 @@ const savedProfileSchema = new mongoose.Schema(
       ref: "Profile",
       required: true,
     },
+    locked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

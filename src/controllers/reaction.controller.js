@@ -4,7 +4,7 @@ const { success } = require("../utils/response");
 exports.react = async (req, res, next) => {
   try {
     const result = await reactionService.react(
-      "66a91f0e9b3c9f1b2d8e9999", // TEMP
+      "66a91f0e9b3c9f1b2d8e9999",
       req.params.profileId,
       req.body.type
     );
