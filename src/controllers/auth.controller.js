@@ -4,7 +4,7 @@ const { success } = require("../utils/response");
 exports.signup = async (req, res, next) => {
   try {
     const user = await authService.register(req.body);
-    success(res, user, "Signup successful", 201);
+    success(res, { user }, "Signup successful. Please verify your email.", 201);
   } catch (err) {
     next(err);
   }
@@ -12,8 +12,18 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const result = await authService.login(req.body);
-    success(res, result, "Login successful");
+    const { token, user } = await authService.login(req.body);
+
+    // 1. Set cookie so browser handles auth automatically
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // 2. Return user wrapped in data object for the success utility
+    success(res, { user }, "Login successful");
   } catch (err) {
     next(err);
   }
@@ -26,4 +36,17 @@ exports.verifyEmail = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+
+exports.getMe = async (req, res, next) => {
+  try {
+    success(res, { user: req.user }, "User fetched successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  res.clearCookie("token");
+  success(res, null, "Logged out successfully");
 };
