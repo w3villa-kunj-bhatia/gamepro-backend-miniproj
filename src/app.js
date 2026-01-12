@@ -12,6 +12,7 @@ app.use("/api/games", require("./routes/game.routes"));
 app.use("/api/saved-profiles", require("./routes/savedProfile.routes"));
 app.use("/api/reactions", require("./routes/reaction.routes"));
 app.use(express.static(path.join(__dirname, "../public")));
+app.use("/api/dashboard", require("./routes/dashboard.routes"));
 
 app.use(errorHandler);
 

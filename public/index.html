@@ -32,6 +32,9 @@
     <h2>Games</h2>
     <button onclick="addGame()">Add Game</button>
 
+    <h2>Dashboard</h2>
+    <button onclick="loadProfiles()">Load Profiles</button>
+
     <h2>Response</h2>
     <pre id="output"></pre>
 
@@ -90,6 +93,16 @@
             platform: "PC",
             skill: "Beginner",
           }),
+        });
+
+        show(await res.json());
+      }
+
+      async function loadProfiles() {
+        const res = await fetch(`${API}/dashboard/profiles?page=1&limit=5`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         show(await res.json());
