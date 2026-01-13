@@ -9,9 +9,9 @@ const app = express();
 
 // 1. Configure CORS to allow your React frontend
 app.use(cors({
-  origin: "http://localhost:5173", // Allow ONLY your React dev server
-  credentials: true,               // Allow sending/receiving cookies
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Handle preflight requests
+  origin: "http://localhost:5173", 
+  credentials: true,               
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 

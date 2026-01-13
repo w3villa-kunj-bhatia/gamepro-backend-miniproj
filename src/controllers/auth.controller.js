@@ -21,7 +21,7 @@ exports.login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    success(res, { user, token }, "Login successful");
+    success(res, { user }, "Login successful");
   } catch (err) {
     next(err);
   }
@@ -47,4 +47,12 @@ exports.getMe = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   res.clearCookie("token");
   success(res, null, "Logged out successfully");
+};
+
+exports.getMe = async (req, res, next) => {
+  try {
+    success(res, { user: req.user }, "User fetched successfully");
+  } catch (err) {
+    next(err);
+  }
 };
