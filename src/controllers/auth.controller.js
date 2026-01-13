@@ -14,16 +14,14 @@ exports.login = async (req, res, next) => {
   try {
     const { token, user } = await authService.login(req.body);
 
-    // 1. Set cookie so browser handles auth automatically
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // 2. Return user wrapped in data object for the success utility
-    success(res, { user }, "Login successful");
+    success(res, { user, token }, "Login successful");
   } catch (err) {
     next(err);
   }

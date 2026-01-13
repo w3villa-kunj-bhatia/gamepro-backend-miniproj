@@ -105,6 +105,12 @@
         });
 
         const data = await res.json();
+
+        if (!res.ok) {
+          profileOutput.innerText = `Error: ${data.message}`;
+          return; // Stop here if unauthorized
+        }
+
         profileOutput.innerText = JSON.stringify(data, null, 2);
         renderMyGames(data.data.games || []);
       }
@@ -152,7 +158,7 @@
         list.forEach((game) => {
           const cover = game.cover?.url
             ? game.cover.url.replace("t_thumb", "t_cover_big")
-            : "";
+            : "https://via.placeholder.com/120x150?text=No+Cover";
 
           games.innerHTML += `
       <div class="card">
@@ -191,12 +197,12 @@
       function renderMyGames(gamesList) {
         myGames.innerHTML = "";
         gamesList.forEach((g) => {
+          const imgUrl = g.coverUrl || "https://via.placeholder.com/120";
           myGames.innerHTML += `
       <div class="card">
-        <img src="${g.coverUrl}" width="120"><br>
+        <img src="${imgUrl}" width="120"><br>
         ${g.name}
-      </div>
-    `;
+      </div>`;
         });
       }
     </script>

@@ -2,22 +2,18 @@ const jwt = require("jsonwebtoken");
 const AppError = require("../utils/AppError");
 
 module.exports = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1] || req.cookies?.token;
 
-  console.log("RAW AUTH HEADER:", req.headers.authorization);
-
-  if (!req.headers.authorization) {
-    throw new AppError("JWT must be provided", 401);
+  if (!token) {
+    throw new AppError("Authentication token must be provided", 401);
   }
-
-  const token = req.headers.authorization.split(" ")[1];
-  console.log("TOKEN STRING:", token);
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    req.user = decoded; 
     next();
   } catch (err) {
-    console.error("JWT ERROR:", err.message);
+    console.error("JWT Error:", err.message);
     throw new AppError("Invalid token", 401);
   }
 };
