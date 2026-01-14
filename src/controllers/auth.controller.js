@@ -1,5 +1,6 @@
 const authService = require("../services/auth.service");
 const { success } = require("../utils/response");
+const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -21,7 +22,6 @@ exports.login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Success response includes the user object which contains the role
     success(res, { user }, "Login successful");
   } catch (err) {
     next(err);
@@ -48,4 +48,27 @@ exports.getMe = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   res.clearCookie("token");
   success(res, null, "Logged out successfully");
+};
+
+exports.socialLoginCallback = async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role, plan: user.plan },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.redirect("http://localhost:5173/dashboard?login=success");
+  } catch (err) {
+    next(err);
+  }
 };

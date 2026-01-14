@@ -2,8 +2,11 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    email: { type: String, unique: true },
-    password: String,
+    email: { type: String, unique: true, required: true },
+    password:{ type: String},
+
+    googleId: { type: String },
+    facebookId: { type: String },
 
     role: { type: String, enum: ["user", "admin"], default: "user" },
     isVerified: { type: Boolean, default: false },
