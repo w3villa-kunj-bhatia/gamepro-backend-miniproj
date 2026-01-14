@@ -31,7 +31,7 @@ exports.login = async (req, res, next) => {
 exports.verifyEmail = async (req, res, next) => {
   try {
     await authService.verifyEmail(req.query.token);
-    success(res, null, "Email verified successfully");
+    res.redirect("/verified.html");
   } catch (err) {
     next(err);
   }
