@@ -24,7 +24,7 @@ exports.register = async (userData) => {
   });
 
   const verificationUrl = `${
-    process.env.FRONTEND_URL || "http://localhost:5173"
+    process.env.FRONTEND_URL || "http://localhost:5000/api/auth"
   }/verify-email?token=${verificationToken}`;
 
   try {
