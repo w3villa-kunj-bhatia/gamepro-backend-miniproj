@@ -108,7 +108,7 @@
 
         if (!res.ok) {
           profileOutput.innerText = `Error: ${data.message}`;
-          return; // Stop here if unauthorized
+          return; 
         }
 
         profileOutput.innerText = JSON.stringify(data, null, 2);

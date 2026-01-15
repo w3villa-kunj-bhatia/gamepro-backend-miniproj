@@ -18,7 +18,7 @@ exports.register = async (userData) => {
   const user = await User.create({
     email: email.toLowerCase(),
     password: hashedPassword,
-    isVerified: false, // Ensure this matches field in User.js
+    isVerified: false, 
     emailVerificationToken: verificationToken,
     emailVerificationExpires: tokenExpires,
   });
@@ -49,7 +49,7 @@ exports.verifyEmail = async (token) => {
       emailVerificationExpires: { $gt: Date.now() },
     },
     {
-      $set: { isVerified: true }, // Field name must be isVerified
+      $set: { isVerified: true }, 
       $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
     },
     { new: true }

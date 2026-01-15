@@ -40,7 +40,7 @@ exports.verifyEmail = async (req, res, next) => {
 
 exports.getMe = async (req, res, next) => {
   try {
-    const user = req.user; // Already attached by auth middleware
+    const user = req.user; 
     
     const profile = await Profile.findOne({ user: user._id });
 
