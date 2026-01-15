@@ -36,3 +36,14 @@ exports.getGameById = async (igdbId) => {
     `
   );
 };
+
+exports.searchCharacters = async (search) => {
+  return igdbRequest(
+    "characters",
+    `
+      search "${search}";
+      fields name, mug_shot.url;
+      limit 10;
+    `
+  );
+};

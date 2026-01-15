@@ -17,8 +17,13 @@ const profileSchema = new mongoose.Schema({
       name: String,
       platform: String,
       skill: String,
+      coverUrl: String,
     },
   ],
+  topCharacters: [{
+    name: String,
+    imageUrl: String
+  }]
 });
 
 module.exports = mongoose.model("Profile", profileSchema);

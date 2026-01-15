@@ -18,3 +18,12 @@ exports.getGame = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.searchCharacters = async (req, res, next) => {
+  try {
+    const characters = await igdbService.searchCharacters(req.query.q);
+    success(res, characters);
+  } catch (err) {
+    next(err);
+  }
+};

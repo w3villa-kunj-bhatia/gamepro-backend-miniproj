@@ -1,6 +1,7 @@
 const authService = require("../services/auth.service");
 const { success } = require("../utils/response");
 const jwt = require("jsonwebtoken");
+const Profile = require("../models/Profile");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -39,7 +40,19 @@ exports.verifyEmail = async (req, res, next) => {
 
 exports.getMe = async (req, res, next) => {
   try {
-    success(res, { user: req.user }, "User fetched successfully");
+    const user = req.user; // Already attached by auth middleware
+    
+    const profile = await Profile.findOne({ user: user._id });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          ...user._doc,
+          username: profile ? profile.username : null 
+        }
+      }
+    });
   } catch (err) {
     next(err);
   }
