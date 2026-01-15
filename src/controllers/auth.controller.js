@@ -2,6 +2,7 @@ const authService = require("../services/auth.service");
 const { success } = require("../utils/response");
 const jwt = require("jsonwebtoken");
 const Profile = require("../models/Profile");
+const User = require("../models/User");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -40,18 +41,26 @@ exports.verifyEmail = async (req, res, next) => {
 
 exports.getMe = async (req, res, next) => {
   try {
-    const user = req.user; 
-    
-    const profile = await Profile.findOne({ user: user._id });
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const profile = await Profile.findOne({ user: userId });
 
     res.status(200).json({
       success: true,
       data: {
         user: {
           ...user._doc,
-          username: profile ? profile.username : null 
-        }
-      }
+          username: profile ? profile.username : null,
+        },
+      },
     });
   } catch (err) {
     next(err);
