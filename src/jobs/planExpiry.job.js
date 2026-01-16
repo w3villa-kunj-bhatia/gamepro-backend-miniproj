@@ -15,23 +15,29 @@ const runPlanExpiryJob = () => {
     });
 
     for (const user of expiredUsers) {
-      user.plan = "free";
-      user.planExpiresAt = null;
-      await user.save();
+      try {
+        user.plan = "free";
+        user.planExpiresAt = null;
+        await user.save();
 
-      console.log(`[CRON] User ${user.email} downgraded to FREE`);
+        console.log(`[CRON] User ${user.email} downgraded to FREE`);
+
+        const freeLimit = plans.free.savedProfiles;
+
+        const savedProfiles = await SavedProfile.find({ user: user._id }).sort({
+          createdAt: 1,
+        });
+
+        const updatePromises = savedProfiles.map((sp, index) => {
+          sp.locked = index >= freeLimit;
+          return sp.save();
+        });
+
+        await Promise.all(updatePromises);
+      } catch (err) {
+        console.error(`[CRON] Error processing user ${user.email}:`, err);
+      }
     }
-    const freeLimit = plans.free.savedProfiles;
-
-    const savedProfiles = await SavedProfile.find({ User: User._id }).sort({
-      createdAt: 1,
-    }); 
-
-    savedProfiles.forEach((sp, index) => {
-      sp.locked = index >= freeLimit;
-    });
-
-    await Promise.all(savedProfiles.map((sp) => sp.save()));
   });
 };
 

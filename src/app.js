@@ -27,7 +27,7 @@ app.use("/api/saved-profiles", require("./routes/savedProfile.routes"));
 app.use("/api/reactions", require("./routes/reaction.routes"));
 app.use("/api/dashboard", require("./routes/dashboard.routes"));
 app.use("/api/comments", require("./routes/comment.routes"));
-
+app.use("/api/payment", require("./routes/payment.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
 
 app.use(express.static(path.join(__dirname, "../public")));

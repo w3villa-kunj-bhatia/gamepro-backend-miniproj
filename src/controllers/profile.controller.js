@@ -1,7 +1,7 @@
 const profileService = require("../services/profile.service");
 const { success } = require("../utils/response");
 const plans = require("../config/plans"); 
-const AppError = require("../utils/AppError"); 
+const AppError = require("../utils/AppError");
 
 exports.upsertProfile = async (req, res, next) => {
   try {
