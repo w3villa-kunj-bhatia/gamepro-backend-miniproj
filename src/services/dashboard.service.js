@@ -1,13 +1,16 @@
 const Profile = require("../models/Profile");
 const Reaction = require("../models/Reaction");
 
-exports.getProfiles = async ({ userId, page = 1, limit = 5 }) => {
+exports.getProfiles = async ({ userId, page = 1, limit = 5, search = "" }) => {
   const skip = (page - 1) * limit;
 
-  const profiles = await Profile.find({ user: { $ne: userId } })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+  const query = { user: { $ne: userId } };
+
+  if (search) {
+    query.username = { $regex: search, $options: "i" };
+  }
+
+  const profiles = await Profile.find(query).skip(skip).limit(limit).lean();
 
   const profileIds = profiles.map((p) => p._id);
 
@@ -36,7 +39,7 @@ exports.getProfiles = async ({ userId, page = 1, limit = 5 }) => {
     dislikes: countsMap[p._id]?.dislikes || 0,
   }));
 
-  const total = await Profile.countDocuments({ user: { $ne: userId } });
+  const total = await Profile.countDocuments(query);
 
   return {
     data: result,
