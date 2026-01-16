@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, unique: true, required: true },
-    password:{ type: String},
+    password: { type: String },
 
     googleId: { type: String },
     facebookId: { type: String },
@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
       default: "free",
     },
     planExpiresAt: Date,
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

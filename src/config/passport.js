@@ -17,6 +17,12 @@ passport.use(
         let user = await User.findOne({ email: email.toLowerCase() });
 
         if (user) {
+          if (user.isBlocked) {
+            return done(null, false, {
+              message: "Your account has been blocked. Please contact support.",
+            });
+          }
+
           if (!user.googleId) {
             user.googleId = profile.id;
             user.isVerified = true;
@@ -61,6 +67,12 @@ passport.use(
         let user = await User.findOne({ email: email.toLowerCase() });
 
         if (user) {
+          if (user.isBlocked) {
+            return done(null, false, {
+              message: "Your account has been blocked. Please contact support.",
+            });
+          }
+
           if (!user.facebookId) {
             user.facebookId = profile.id;
             user.isVerified = true;

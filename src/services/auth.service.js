@@ -18,7 +18,7 @@ exports.register = async (userData) => {
   const user = await User.create({
     email: email.toLowerCase(),
     password: hashedPassword,
-    isVerified: false, 
+    isVerified: false,
     emailVerificationToken: verificationToken,
     emailVerificationExpires: tokenExpires,
   });
@@ -49,7 +49,7 @@ exports.verifyEmail = async (token) => {
       emailVerificationExpires: { $gt: Date.now() },
     },
     {
-      $set: { isVerified: true }, 
+      $set: { isVerified: true },
       $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
     },
     { new: true }
@@ -61,9 +61,16 @@ exports.verifyEmail = async (token) => {
 
 exports.login = async ({ email, password }) => {
   const normalizedEmail = email.trim().toLowerCase();
-  const user = await User.findOne({ email: normalizedEmail });
 
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) throw new AppError("Invalid credentials", 401);
+
+  if (user.isBlocked) {
+    throw new AppError(
+      "Your account has been blocked. Please contact support.",
+      403
+    );
+  }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new AppError("Invalid credentials", 401);

@@ -18,7 +18,7 @@ exports.getUsers = async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const users = await User.find(query)
-      .select("-password") 
+      .select("-password")
       .skip(skip)
       .limit(Number(limit))
       .sort({ createdAt: -1 });
@@ -38,6 +38,27 @@ exports.getUsers = async (req, res, next) => {
       },
       "Users fetched successfully"
     );
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.toggleUserStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+
+    const statusMessage = user.isBlocked ? "User blocked" : "User unblocked";
+    success(res, { isBlocked: user.isBlocked }, statusMessage);
   } catch (err) {
     next(err);
   }

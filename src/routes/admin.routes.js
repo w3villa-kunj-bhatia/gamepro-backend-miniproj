@@ -5,7 +5,7 @@ const auth = require("../middlewares/auth.middleware");
 const role = require("../middlewares/role.middleware");
 
 router.use(auth, role("admin"));
-
+router.patch("/users/:id/status", adminController.toggleUserStatus);
 router.get("/users", adminController.getUsers);
 
 module.exports = router;
