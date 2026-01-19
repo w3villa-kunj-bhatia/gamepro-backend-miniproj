@@ -31,7 +31,6 @@ exports.getCounts = async (profileId) => {
   const reactions = await Reaction.aggregate([
     {
       $match: {
-        // Use the imported mongoose variable
         profile: new mongoose.Types.ObjectId(profileId),
       },
     },

@@ -16,7 +16,6 @@ exports.createCheckoutSession = async (req, res, next) => {
 
     if (!plan) throw new AppError("Invalid plan selected", 400);
 
-    // Use CLIENT_URL here so the user goes back to the React app
     const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 
     const session = await stripe.checkout.sessions.create({
@@ -49,15 +48,12 @@ exports.createCheckoutSession = async (req, res, next) => {
   }
 };
 
-// ... keep verifyPayment as is ...
 exports.verifyPayment = async (req, res, next) => {
-  // ... (same as previous response)
   try {
     const { session_id } = req.body;
 
     if (!session_id) throw new AppError("Session ID is required", 400);
 
-    // 1. Retrieve session from Stripe to verify it's real and paid
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
     if (session.payment_status !== "paid") {
@@ -66,11 +62,9 @@ exports.verifyPayment = async (req, res, next) => {
 
     const { userId, planId } = session.metadata;
 
-    // 2. Upgrade the user
     const user = await User.findById(userId);
     if (!user) throw new AppError("User not found", 404);
 
-    // Set plan and expiry (using the logic we discussed earlier)
     user.plan = planId;
     if (plans[planId].duration) {
       user.planExpiresAt = new Date(Date.now() + plans[planId].duration);

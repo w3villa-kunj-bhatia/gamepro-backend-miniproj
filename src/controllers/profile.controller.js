@@ -1,24 +1,55 @@
 const profileService = require("../services/profile.service");
 const { success } = require("../utils/response");
-const plans = require("../config/plans"); 
+const plans = require("../config/plans");
 const AppError = require("../utils/AppError");
 
 exports.upsertProfile = async (req, res, next) => {
   try {
-    const userPlan = req.user && req.user.plan ? req.user.plan : "free";
-    const gameLimit = plans[userPlan] ? plans[userPlan].games : 3;
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
 
-    if (req.body.games && req.body.games.length > gameLimit) {
+    const userPlan = req.user.plan || "free";
+    const planConfig = plans[userPlan] || plans.free || { games: 3 };
+    const gameLimit = planConfig.games;
+
+    let profileData = { ...req.body };
+
+    if (req.file) {
+      console.log("File uploaded to Cloudinary:", req.file.path);
+      profileData.avatar = req.file.path;
+    }
+
+    ["games", "topCharacters", "coordinates"].forEach((field) => {
+      if (typeof profileData[field] === "string") {
+        try {
+          profileData[field] = JSON.parse(profileData[field]);
+        } catch (e) {
+          console.error(`Failed to parse field '${field}':`, e.message);
+          delete profileData[field];
+        }
+      }
+    });
+
+    if (
+      profileData.games &&
+      Array.isArray(profileData.games) &&
+      profileData.games.length > gameLimit
+    ) {
       throw new AppError(
         `Your ${userPlan} plan allows only ${gameLimit} games.`,
-        403
+        403,
       );
     }
 
-    const profile = await profileService.upsertProfile(req.user.id, req.body);
+    const profile = await profileService.upsertProfile(
+      req.user.id,
+      profileData,
+    );
 
-    success(res, profile, "Profile saved");
+    success(res, profile, "Profile saved successfully");
   } catch (err) {
+    console.error("Profile Controller Error:", err);
     next(err);
   }
 };
