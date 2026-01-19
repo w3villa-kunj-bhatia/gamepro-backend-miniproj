@@ -3,15 +3,16 @@ const { success } = require("../utils/response");
 
 exports.getProfiles = async (req, res, next) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 5;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
     const search = req.query.search || "";
+    const userId = req.user.id; 
 
     const result = await dashboardService.getProfiles({
-      userId: req.user.id,
+      userId,
       page,
       limit,
-      search, 
+      search,
     });
 
     success(res, result);

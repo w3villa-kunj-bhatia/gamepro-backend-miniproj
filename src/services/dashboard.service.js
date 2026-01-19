@@ -1,16 +1,16 @@
 const Profile = require("../models/Profile");
 const Reaction = require("../models/Reaction");
 
-exports.getProfiles = async ({ userId, page = 1, limit = 5, search = "" }) => {
+exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
   const skip = (page - 1) * limit;
 
   const query = { user: { $ne: userId } };
-
   if (search) {
     query.username = { $regex: search, $options: "i" };
   }
 
   const profiles = await Profile.find(query).skip(skip).limit(limit).lean();
+  const total = await Profile.countDocuments(query);
 
   const profileIds = profiles.map((p) => p._id);
 
@@ -35,19 +35,14 @@ exports.getProfiles = async ({ userId, page = 1, limit = 5, search = "" }) => {
 
   const result = profiles.map((p) => ({
     ...p,
-    likes: countsMap[p._id]?.likes || 0,
-    dislikes: countsMap[p._id]?.dislikes || 0,
+    likes: countsMap[p._id.toString()]?.likes || 0,
+    dislikes: countsMap[p._id.toString()]?.dislikes || 0,
   }));
-
-  const total = await Profile.countDocuments(query);
 
   return {
     data: result,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    totalPages: Math.ceil(total / limit),
+    currentPage: page,
+    totalProfiles: total,
   };
 };

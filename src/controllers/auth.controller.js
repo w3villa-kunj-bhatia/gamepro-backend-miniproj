@@ -4,6 +4,17 @@ const jwt = require("jsonwebtoken");
 const Profile = require("../models/Profile");
 const User = require("../models/User");
 
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+};
+
 exports.signup = async (req, res, next) => {
   try {
     const user = await authService.register(req.body);
@@ -17,12 +28,7 @@ exports.login = async (req, res, next) => {
   try {
     const { token, user } = await authService.login(req.body);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, getCookieOptions());
 
     success(res, { user }, "Login successful");
   } catch (err) {
@@ -68,7 +74,12 @@ exports.getMe = async (req, res, next) => {
 };
 
 exports.logout = async (req, res, next) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+  });
   success(res, null, "Logged out successfully");
 };
 
@@ -79,18 +90,16 @@ exports.socialLoginCallback = async (req, res, next) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, plan: user.plan },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, getCookieOptions());
 
     res.redirect("http://localhost:5173/dashboard?login=success");
   } catch (err) {
-    next(err);
+    const msg = err.message || "Login callback failed";
+    res.redirect(
+      `http://localhost:5173/login?error=${encodeURIComponent(msg)}`,
+    );
   }
 };
