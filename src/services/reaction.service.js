@@ -1,3 +1,4 @@
+const mongoose = require("mongoose"); // Import mongoose here
 const Reaction = require("../models/Reaction");
 const Profile = require("../models/Profile");
 const AppError = require("../utils/AppError");
@@ -6,7 +7,7 @@ exports.react = async (userId, profileId, type) => {
   const profile = await Profile.findById(profileId);
   if (!profile) throw new AppError("Profile not found", 404);
 
-  if (profile.user.toString() === userId) {
+  if (profile.user.toString() === userId.toString()) {
     throw new AppError("You cannot react to your own profile", 400);
   }
 
@@ -28,7 +29,12 @@ exports.react = async (userId, profileId, type) => {
 
 exports.getCounts = async (profileId) => {
   const reactions = await Reaction.aggregate([
-    { $match: { profile: new require("mongoose").Types.ObjectId(profileId) } },
+    {
+      $match: {
+        // Use the imported mongoose variable
+        profile: new mongoose.Types.ObjectId(profileId),
+      },
+    },
     {
       $group: {
         _id: "$type",
