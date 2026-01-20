@@ -4,19 +4,21 @@ const passport = require("passport");
 const authController = require("../controllers/auth.controller");
 const auth = require("../middlewares/auth.middleware");
 
+const clientURL = process.env.CLIENT_URL || "http://localhost:5173";
+
 const handleSocialCallback = (strategy) => (req, res, next) => {
   passport.authenticate(strategy, { session: false }, (err, user, info) => {
     if (err) {
       const errorMessage = err.message || "Authentication failed";
       return res.redirect(
-        `http://localhost:5173/login?error=${encodeURIComponent(errorMessage)}`,
+        `${clientURL}/login?error=${encodeURIComponent(errorMessage)}`,
       );
     }
 
     if (!user) {
       const errorMessage = info?.message || "Authentication failed";
       return res.redirect(
-        `http://localhost:5173/login?error=${encodeURIComponent(errorMessage)}`,
+        `${clientURL}/login?error=${encodeURIComponent(errorMessage)}`,
       );
     }
 
@@ -40,7 +42,7 @@ router.get(
 
 router.get(
   "/google/callback",
-  handleSocialCallback("google"), 
+  handleSocialCallback("google"),
   authController.socialLoginCallback,
 );
 
