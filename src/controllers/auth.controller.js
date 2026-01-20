@@ -8,8 +8,8 @@ const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction, 
+    sameSite: isProduction ? "none" : "lax", 
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
@@ -27,9 +27,7 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { token, user } = await authService.login(req.body);
-
     res.cookie("token", token, getCookieOptions());
-
     success(res, { user }, "Login successful");
   } catch (err) {
     next(err);
@@ -48,7 +46,6 @@ exports.verifyEmail = async (req, res, next) => {
 exports.getMe = async (req, res, next) => {
   try {
     const userId = req.user.id;
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -74,10 +71,11 @@ exports.getMe = async (req, res, next) => {
 };
 
 exports.logout = async (req, res, next) => {
+  const isProduction = process.env.NODE_ENV === "production";
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
   });
   success(res, null, "Logged out successfully");
@@ -86,7 +84,6 @@ exports.logout = async (req, res, next) => {
 exports.socialLoginCallback = async (req, res, next) => {
   try {
     const user = req.user;
-
     const token = jwt.sign(
       { id: user._id, role: user.role, plan: user.plan },
       process.env.JWT_SECRET,
@@ -95,11 +92,11 @@ exports.socialLoginCallback = async (req, res, next) => {
 
     res.cookie("token", token, getCookieOptions());
 
-    res.redirect("http://localhost:5173/dashboard?login=success");
+    const clientURL = process.env.CLIENT_URL || "http://localhost:5173";
+    res.redirect(`${clientURL}/dashboard?login=success`);
   } catch (err) {
     const msg = err.message || "Login callback failed";
-    res.redirect(
-      `http://localhost:5173/login?error=${encodeURIComponent(msg)}`,
-    );
+    const clientURL = process.env.CLIENT_URL || "http://localhost:5173";
+    res.redirect(`${clientURL}/login?error=${encodeURIComponent(msg)}`);
   }
 };

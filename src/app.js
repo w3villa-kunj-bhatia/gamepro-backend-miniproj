@@ -1,23 +1,37 @@
 const express = require("express");
-const cors = require("cors"); 
-const cookieParser = require("cookie-parser"); 
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const errorHandler = require("./middlewares/error.middleware");
 const path = require("path");
 const igdbRoutes = require("./routes/igdb.routes");
 
-require("./config/passport")
+require("./config/passport");
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:5173", 
-  credentials: true,               
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  process.env.CLIENT_URL, 
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
-app.use(cookieParser()); 
+app.use(cookieParser());
 
 app.use("/api/igdb", igdbRoutes);
 app.use("/api/auth", require("./routes/auth.routes"));

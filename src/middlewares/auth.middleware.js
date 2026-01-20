@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const AppError = require("../utils/AppError");
-const User = require("../models/User");
 
 module.exports = async (req, res, next) => {
   try {
@@ -13,23 +12,13 @@ module.exports = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id);
+    req.user = {
+      _id: decoded.id,
+      id: decoded.id,
+      role: decoded.role || "user",
+      plan: decoded.plan || "free",
+    };
 
-    if (!user) {
-      throw new AppError(
-        "The user belonging to this token no longer exists.",
-        401
-      );
-    }
-
-    if (user.isBlocked) {
-      return res.status(403).json({
-        success: false,
-        message: "Your account has been blocked. Access denied.",
-      });
-    }
-
-    req.user = user;
     next();
   } catch (err) {
     if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
