@@ -1,4 +1,4 @@
-# GamePro Backend API
+# GamePro Backend
 
 This is the backend server for the GamePro application, a platform for gamers to manage profiles, view game data (via IGDB), and interact with other users. It is built with Node.js, Express, and MongoDB.
 
