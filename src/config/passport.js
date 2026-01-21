@@ -8,14 +8,14 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
+      callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
       proxy: true,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const email = profile.emails[0].value;
+        const email = profile.emails[0].value.toLowerCase();
 
-        let user = await User.findOne({ email: email.toLowerCase() });
+        let user = await User.findOne({ email });
 
         if (user) {
           if (user.isBlocked) {
@@ -29,11 +29,12 @@ passport.use(
             user.isVerified = true;
             await user.save();
           }
+
           return done(null, user);
         }
 
         user = await User.create({
-          email: email.toLowerCase(),
+          email,
           googleId: profile.id,
           isVerified: true,
         });
@@ -42,8 +43,8 @@ passport.use(
       } catch (err) {
         return done(err, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 passport.use(
@@ -92,8 +93,8 @@ passport.use(
       } catch (err) {
         return done(err, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 module.exports = passport;
