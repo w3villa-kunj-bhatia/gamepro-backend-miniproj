@@ -3,7 +3,17 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, unique: true, required: true },
-    password: { type: String },
+    password: {
+      type: String,
+      validate: {
+        validator: function (value) {
+          if (!value) return true;
+          return /^(?=.*\d)(?=.*[A-Z])(?=.*[\W_]).{8,}$/.test(value);
+        },
+        message:
+          "Password must contain at least 1 number, 1 uppercase letter, and 1 special character.",
+      },
+    },
 
     googleId: { type: String },
     facebookId: { type: String },
@@ -25,7 +35,7 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("User", userSchema);
