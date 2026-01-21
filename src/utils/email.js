@@ -1,30 +1,39 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 
 exports.sendEmail = async ({ to, subject, html }) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT),
-      secure: false, 
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+    const data = {
+      sender: {
+        email: process.env.EMAIL_FROM || "no-reply@gamepro.com",
+        name: "GamePro",
       },
-    });
-
-    const mailOptions = {
-      from: '"GamePro" <no-reply@gamepro.com>',
-      to: to,
+      to: [{ email: to }],
       subject: subject,
-      html: html,
+      htmlContent: html,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully: %s", info.messageId);
-    return info;
+    const config = {
+      method: "post",
+      url: "https://api.brevo.com/v3/smtp/email",
+      headers: {
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      data: data,
+    };
+
+    const response = await axios(config);
+    console.log(
+      "Email sent successfully via API. Message ID:",
+      response.data.messageId,
+    );
+    return response.data;
   } catch (error) {
-    console.error("Error sending email:", error);
-    // We throw the error so the background process knows it failed
+    console.error(
+      "Error sending email via API:",
+      error.response ? error.response.data : error.message,
+    );
     throw error;
   }
 };
