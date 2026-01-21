@@ -29,7 +29,7 @@ const handleSocialCallback = (strategy) => (req, res, next) => {
 
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
-router.get("/verify-email", authController.verifyEmail);
+router.get("/verify", authController.verifyEmail);
 router.get("/me", auth, authController.getMe);
 
 router.get(
