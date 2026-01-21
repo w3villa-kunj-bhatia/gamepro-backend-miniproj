@@ -3,13 +3,15 @@ const { success } = require("../utils/response");
 const jwt = require("jsonwebtoken");
 const Profile = require("../models/Profile");
 const User = require("../models/User");
+const crypto = require("crypto");
+const { sendEmail } = require("../utils/email");
 
 const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: isProduction, 
-    sameSite: isProduction ? "none" : "lax", 
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
@@ -17,8 +19,50 @@ const getCookieOptions = () => {
 
 exports.signup = async (req, res, next) => {
   try {
-    const user = await authService.register(req.body);
-    success(res, { user }, "Signup successful. Please verify your email.", 201);
+    const { email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already registered.",
+      });
+    }
+
+    const verificationToken = crypto.randomBytes(20).toString("hex");
+    const verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+    const user = await User.create({
+      email,
+      password,
+      verificationToken,
+      verificationTokenExpire,
+      isVerified: false,
+    });
+
+    const baseURL = process.env.BASE_URL || "http://localhost:5000";
+    const verifyUrl = `${baseURL}/api/auth/verify?token=${verificationToken}`;
+
+    const message = `
+      <h1>Email Verification</h1>
+      <p>Please verify your account by clicking the link below:</p>
+      <a href="${verifyUrl}" clicktracking=off>${verifyUrl}</a>
+    `;
+
+    sendEmail({
+      to: user.email,
+      subject: "GamePro - Account Verification",
+      html: message,
+    }).catch((err) => {
+      console.error("Background Email Error:", err.message);
+    });
+
+    success(
+      res,
+      { user },
+      "Signup successful. Please check your email for verification.",
+      201,
+    );
   } catch (err) {
     next(err);
   }
