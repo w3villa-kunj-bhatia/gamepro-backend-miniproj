@@ -35,8 +35,8 @@ exports.signup = async (req, res, next) => {
     const user = await User.create({
       email,
       password,
-      verificationToken,
-      verificationTokenExpire,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: verificationTokenExpire,
       isVerified: false,
     });
 
@@ -48,6 +48,8 @@ exports.signup = async (req, res, next) => {
       <p>Please verify your account by clicking the link below:</p>
       <a href="${verifyUrl}" clicktracking=off>${verifyUrl}</a>
     `;
+
+    // ... rest of your code
 
     sendEmail({
       to: user.email,
