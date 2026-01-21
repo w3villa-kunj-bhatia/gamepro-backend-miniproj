@@ -5,6 +5,7 @@ const Profile = require("../models/Profile");
 const User = require("../models/User");
 const crypto = require("crypto");
 const { sendEmail } = require("../utils/email");
+const bcrypt = require("bcrypt"); 
 
 const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
@@ -29,12 +30,14 @@ exports.signup = async (req, res, next) => {
       });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     const verificationToken = crypto.randomBytes(20).toString("hex");
     const verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
     const user = await User.create({
       email,
-      password,
+      password: hashedPassword, 
       emailVerificationToken: verificationToken,
       emailVerificationExpires: verificationTokenExpire,
       isVerified: false,
@@ -48,8 +51,6 @@ exports.signup = async (req, res, next) => {
       <p>Please verify your account by clicking the link below:</p>
       <a href="${verifyUrl}" clicktracking=off>${verifyUrl}</a>
     `;
-
-    // ... rest of your code
 
     sendEmail({
       to: user.email,
