@@ -52,7 +52,7 @@ exports.verifyEmail = async (token) => {
       $set: { isVerified: true },
       $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
     },
-    { new: true }
+    { new: true },
   );
 
   if (!user) throw new AppError("Invalid or expired token", 400);
@@ -63,17 +63,22 @@ exports.login = async ({ email, password }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   const user = await User.findOne({ email: normalizedEmail });
-  if (!user) throw new AppError("Invalid credentials", 401);
+
+  if (!user) {
+    throw new AppError("User does not exist. Please sign up.", 404);
+  }
 
   if (user.isBlocked) {
     throw new AppError(
       "Your account has been blocked. Please contact support.",
-      403
+      403,
     );
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) throw new AppError("Invalid credentials", 401);
+  if (!isMatch) {
+    throw new AppError("Incorrect password. Please try again.", 401);
+  }
 
   if (user.isVerified !== true) {
     throw new AppError("Email not verified", 403);
@@ -82,7 +87,7 @@ exports.login = async ({ email, password }) => {
   const token = jwt.sign(
     { id: user._id, role: user.role, plan: user.plan },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "7d" },
   );
 
   return { token, user };
