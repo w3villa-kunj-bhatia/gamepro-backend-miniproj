@@ -1,5 +1,6 @@
 const SavedProfile = require("../models/SavedProfile");
 const Profile = require("../models/Profile");
+const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const plans = require("../config/plans");
 
@@ -19,7 +20,10 @@ exports.saveProfile = async (userId, profileId, plan) => {
     throw new AppError("Profile already saved", 400);
   }
 
-  const userPlanName = plan && plans[plan] ? plan : "free";
+  const user = await User.findById(userId);
+  if (!user) throw new AppError("User not found", 404);
+
+  const userPlanName = user.plan && plans[user.plan] ? user.plan : "free";
   const userPlanLimit = plans[userPlanName].savedProfiles;
 
   const count = await SavedProfile.countDocuments({ user: userId });
@@ -27,7 +31,7 @@ exports.saveProfile = async (userId, profileId, plan) => {
   if (count >= userPlanLimit) {
     throw new AppError(
       `Saved profile limit reached for ${userPlanName} plan`,
-      403
+      403,
     );
   }
 
