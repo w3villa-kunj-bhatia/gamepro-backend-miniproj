@@ -2,6 +2,7 @@ const profileService = require("../services/profile.service");
 const { success } = require("../utils/response");
 const plans = require("../config/plans");
 const AppError = require("../utils/AppError");
+const User = require("../models/User");
 
 exports.upsertProfile = async (req, res, next) => {
   try {
@@ -9,7 +10,12 @@ exports.upsertProfile = async (req, res, next) => {
       throw new AppError("User not authenticated", 401);
     }
 
-    const userPlan = req.user.plan || "free";
+    const freshUser = await User.findById(req.user.id);
+    if (!freshUser) {
+      throw new AppError("User not found", 404);
+    }
+
+    const userPlan = freshUser.plan || "free";
     const planConfig = plans[userPlan] || plans.free || { games: 3 };
     const gameLimit = planConfig.games;
 
