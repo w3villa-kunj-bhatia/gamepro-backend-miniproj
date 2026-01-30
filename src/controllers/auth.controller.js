@@ -11,10 +11,10 @@ const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 };
 
@@ -74,8 +74,10 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { token, user } = await authService.login(req.body);
+
     res.cookie("token", token, getCookieOptions());
-    success(res, { user }, "Login successful");
+
+    success(res, { user, token }, "Login successful");
   } catch (err) {
     next(err);
   }
@@ -137,10 +139,9 @@ exports.socialLoginCallback = async (req, res, next) => {
       { expiresIn: "7d" },
     );
 
-    res.cookie("token", token, getCookieOptions());
-
     const clientURL = process.env.CLIENT_URL || "http://localhost:5173";
-    res.redirect(`${clientURL}/dashboard?login=success`);
+
+    res.redirect(`${clientURL}/dashboard?login=success&token=${token}`);
   } catch (err) {
     const msg = err.message || "Login callback failed";
     const clientURL = process.env.CLIENT_URL || "http://localhost:5173";
