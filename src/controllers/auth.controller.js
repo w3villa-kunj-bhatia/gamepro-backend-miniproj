@@ -5,16 +5,16 @@ const Profile = require("../models/Profile");
 const User = require("../models/User");
 const crypto = require("crypto");
 const { sendEmail } = require("../utils/email");
-const bcrypt = require("bcrypt"); 
+const bcrypt = require("bcrypt");
 
 const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    secure: true,
+    sameSite: "none",
     path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 };
 
@@ -37,7 +37,7 @@ exports.signup = async (req, res, next) => {
 
     const user = await User.create({
       email,
-      password: hashedPassword, 
+      password: hashedPassword,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: verificationTokenExpire,
       isVerified: false,
