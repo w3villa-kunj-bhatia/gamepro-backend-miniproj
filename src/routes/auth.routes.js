@@ -9,6 +9,7 @@ const clientURL = process.env.CLIENT_URL || "http://localhost:5173";
 const handleSocialCallback = (strategy) => (req, res, next) => {
   passport.authenticate(strategy, { session: false }, (err, user, info) => {
     if (err) {
+      console.error(`[Passport ${strategy} Error]:`, err);
       const errorMessage = err.message || "Authentication failed";
       return res.redirect(
         `${clientURL}/login?error=${encodeURIComponent(errorMessage)}`,
@@ -16,6 +17,10 @@ const handleSocialCallback = (strategy) => (req, res, next) => {
     }
 
     if (!user) {
+      console.error(
+        `[Passport ${strategy} Failed]: No user returned. Info:`,
+        info,
+      ); 
       const errorMessage = info?.message || "Authentication failed";
       return res.redirect(
         `${clientURL}/login?error=${encodeURIComponent(errorMessage)}`,
