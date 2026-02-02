@@ -9,7 +9,12 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
     query.username = { $regex: search, $options: "i" };
   }
 
-  const profiles = await Profile.find(query).skip(skip).limit(limit).lean();
+  const profiles = await Profile.find(query)
+    .populate("user", "plan")
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
   const total = await Profile.countDocuments(query);
 
   const profileIds = profiles.map((p) => p._id);
@@ -35,6 +40,7 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
 
   const result = profiles.map((p) => ({
     ...p,
+    plan: p.user?.plan || "free",
     likes: countsMap[p._id.toString()]?.likes || 0,
     dislikes: countsMap[p._id.toString()]?.dislikes || 0,
   }));
