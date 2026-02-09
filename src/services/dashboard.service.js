@@ -40,6 +40,11 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
     },
   ]);
 
+  const userReactions = await Reaction.find({
+    user: userId,
+    profile: { $in: profileIds },
+  });
+
   const countsMap = {};
   reactions.forEach((r) => {
     const pid = r._id.profile.toString();
@@ -54,6 +59,11 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
     commentsMap[c._id.toString()] = c.count;
   });
 
+  const userReactionMap = {};
+  userReactions.forEach((r) => {
+    userReactionMap[r.profile.toString()] = r.type;
+  });
+
   const result = profiles.map((p) => {
     const pid = p._id.toString();
     return {
@@ -62,6 +72,7 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
       likes: countsMap[pid]?.likes || 0,
       dislikes: countsMap[pid]?.dislikes || 0,
       commentCount: commentsMap[pid] || 0,
+      userReaction: userReactionMap[pid] || null,
     };
   });
 
