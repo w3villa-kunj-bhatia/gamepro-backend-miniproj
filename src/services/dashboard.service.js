@@ -1,5 +1,6 @@
 const Profile = require("../models/Profile");
 const Reaction = require("../models/Reaction");
+const Comment = require("../models/Comment");
 
 exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
   const skip = (page - 1) * limit;
@@ -29,6 +30,16 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
     },
   ]);
 
+  const comments = await Comment.aggregate([
+    { $match: { profile: { $in: profileIds } } },
+    {
+      $group: {
+        _id: "$profile",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
   const countsMap = {};
   reactions.forEach((r) => {
     const pid = r._id.profile.toString();
@@ -38,12 +49,21 @@ exports.getProfiles = async ({ userId, page = 1, limit = 6, search = "" }) => {
     countsMap[pid][`${r._id.type}s`] = r.count;
   });
 
-  const result = profiles.map((p) => ({
-    ...p,
-    plan: p.user?.plan || "free",
-    likes: countsMap[p._id.toString()]?.likes || 0,
-    dislikes: countsMap[p._id.toString()]?.dislikes || 0,
-  }));
+  const commentsMap = {};
+  comments.forEach((c) => {
+    commentsMap[c._id.toString()] = c.count;
+  });
+
+  const result = profiles.map((p) => {
+    const pid = p._id.toString();
+    return {
+      ...p,
+      plan: p.user?.plan || "free",
+      likes: countsMap[pid]?.likes || 0,
+      dislikes: countsMap[pid]?.dislikes || 0,
+      commentCount: commentsMap[pid] || 0,
+    };
+  });
 
   return {
     data: result,
