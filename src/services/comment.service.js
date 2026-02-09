@@ -2,26 +2,29 @@ const Comment = require("../models/Comment");
 const Profile = require("../models/Profile");
 const AppError = require("../utils/AppError");
 
-exports.addComment = async (userId, profileId, text) => {
+exports.addComment = async (userId, targetProfileId, text) => {
   if (!text) throw new AppError("Comment text is required", 400);
 
-  const profile = await Profile.findById(profileId);
-  if (!profile) throw new AppError("Profile not found", 404);
+  const targetProfile = await Profile.findById(targetProfileId);
+  if (!targetProfile) throw new AppError("Target profile not found", 404);
 
-  if (profile.user.toString() === userId) {
-    throw new AppError("You cannot comment on your own profile", 400);
-  }
+  const authorProfile = await Profile.findOne({ user: userId });
+  if (!authorProfile)
+    throw new AppError("You must create a profile before commenting.", 400);
 
-  return Comment.create({
-    profile: profileId,
+  const comment = await Comment.create({
+    profile: targetProfileId,
     user: userId,
+    authorProfile: authorProfile._id,
     text,
   });
+
+  return await comment.populate("authorProfile", "username avatar");
 };
 
 exports.getComments = async (profileId) => {
   return Comment.find({ profile: profileId })
-    .populate("user", "email")
+    .populate("authorProfile", "username avatar")
     .sort({ createdAt: -1 });
 };
 
