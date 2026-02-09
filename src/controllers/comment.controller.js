@@ -6,7 +6,7 @@ exports.addComment = async (req, res, next) => {
     const comment = await commentService.addComment(
       req.user.id,
       req.params.profileId,
-      req.body.text
+      req.body.text,
     );
     success(res, comment, "Comment added", 201);
   } catch (err) {

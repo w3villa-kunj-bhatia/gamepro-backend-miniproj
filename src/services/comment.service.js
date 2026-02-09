@@ -9,8 +9,9 @@ exports.addComment = async (userId, targetProfileId, text) => {
   if (!targetProfile) throw new AppError("Target profile not found", 404);
 
   const authorProfile = await Profile.findOne({ user: userId });
-  if (!authorProfile)
+  if (!authorProfile) {
     throw new AppError("You must create a profile before commenting.", 400);
+  }
 
   const comment = await Comment.create({
     profile: targetProfileId,
